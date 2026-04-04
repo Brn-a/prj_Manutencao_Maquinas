@@ -13,3 +13,11 @@ Sistema desenvolvido em **VB.NET** para gestão de maquinário industrial e cont
 - Visual Basic .NET
 - Banco de Dados (SQL Server / Access via ADODB)
 - Windows Forms
+
+### 📸 Demonstração do Sistema
+
+#### Tela de Cadastro
+![Cadastro](tela_cadstro_de_maquinario%20.png)
+
+#### Lançamento de O.S.
+![Manutenção](tela_laçamento_de_os.png)
