@@ -14,27 +14,26 @@
             Dim caminhoFotoParaSalvar As String = ""
 
             If editando = False Then
+                Dim rs_verifica As New ADODB.Recordset
+                sql = "SELECT tag_maquina FROM tb_maquinas WHERE tag_maquina = '" & txt_tag.Text.Trim() & "'"
+                rs_verifica.Open(sql, db, ADODB.CursorTypeEnum.adOpenStatic, ADODB.LockTypeEnum.adLockReadOnly)
+
+                If Not rs_verifica.EOF Then
+                    rs_verifica.Close()
+                    MsgBox("A TAG informada já existe.", MsgBoxStyle.Exclamation, "TAG duplicada")
+                    txt_tag.Focus()
+                    Exit Sub
+                End If
+
+                rs_verifica.Close()
+
                 ' Salva máquina nova
                 caminhoFotoParaSalvar = dlg_foto.FileName
 
                 sql = "INSERT INTO tb_maquinas (tag_maquina, nome_maquina, setor, fabricante, modelo, data_aquisicao, observacoes, status_maquina, caminho_foto) " &
-                      "VALUES ('" & txt_tag.Text & "', '" & txt_nome.Text & "', '" & txt_setor.Text & "', '" & txt_fabricante.Text & "', '" & txt_modelo.Text & "', '" & data_formatada & "', '" & txt_observacoes.Text & "', 'Ativa', '" & caminhoFotoParaSalvar & "')"
+          "VALUES ('" & txt_tag.Text & "', '" & txt_nome.Text & "', '" & txt_setor.Text & "', '" & txt_fabricante.Text & "', '" & txt_modelo.Text & "', '" & data_formatada & "', '" & txt_observacoes.Text & "', 'Ativa', '" & caminhoFotoParaSalvar & "')"
                 db.Execute(sql)
                 MsgBox("Equipamento " & txt_nome.Text & " salvo com sucesso!", MsgBoxStyle.Information, "Sucesso")
-            Else
-                ' Atualiza os dados da máquina que já existe
-                If Not String.IsNullOrEmpty(dlg_foto.FileName) AndAlso dlg_foto.FileName <> img_maquina.ImageLocation Then
-                    caminhoFotoParaSalvar = dlg_foto.FileName
-                Else
-                    caminhoFotoParaSalvar = img_maquina.ImageLocation
-                End If
-
-                sql = "UPDATE tb_maquinas SET " &
-                      "nome_maquina = '" & txt_nome.Text & "', setor = '" & txt_setor.Text & "', fabricante = '" & txt_fabricante.Text & "', " &
-                      "modelo = '" & txt_modelo.Text & "', data_aquisicao = '" & data_formatada & "', observacoes = '" & txt_observacoes.Text & "', " &
-                      "caminho_foto = '" & caminhoFotoParaSalvar & "' WHERE tag_maquina = '" & txt_tag.Text & "'"
-                db.Execute(sql)
-                MsgBox("Equipamento " & txt_nome.Text & " atualizado com sucesso!", MsgBoxStyle.Information, "Sucesso")
             End If
 
             editando = False
@@ -142,8 +141,18 @@
     End Sub
 
     Sub Limpar_Campos()
-        txt_tag.Clear() : txt_nome.Clear() : txt_setor.Clear() : txt_fabricante.Clear()
-        txt_modelo.Clear() : txt_observacoes.Clear() : dtp_aquisicao.Value = Today
+        txt_tag.Clear()
+        txt_nome.Clear()
+        txt_setor.Clear()
+        txt_fabricante.Clear()
+        txt_modelo.Clear()
+        txt_observacoes.Clear()
+        dtp_aquisicao.Value = Today
+
+        dlg_foto.FileName = ""
+        img_maquina.Image = Nothing
+        img_maquina.ImageLocation = Nothing
+
         txt_tag.Focus()
     End Sub
 
