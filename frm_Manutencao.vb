@@ -6,7 +6,7 @@
         Try
             If db.State = 0 Then Conectar_Banco()
 
-            ' Puxa as máquinas cadastradas pro combo
+            ' Busca as máquinas cadastradas e preenche o ComboBox
             cmb_maquina.Items.Clear()
             Dim rs As New ADODB.Recordset
             sql = "SELECT tag_maquina FROM tb_maquinas ORDER BY tag_maquina"
@@ -36,8 +36,10 @@
         Try
             If db.State = 0 Then Conectar_Banco()
 
+            ' Formata a data para o padrão aceito pelo SQL (Ano-Mês-Dia)
             Dim data_formatada As String = dtp_data.Value.ToString("yyyy-MM-dd")
 
+            ' Validações para garantir que os campos não fiquem em branco
             If cmb_maquina.Text.Trim = "" Then
                 MsgBox("Selecione a TAG da máquina.", MsgBoxStyle.Exclamation, "Atenção")
                 cmb_maquina.Focus()
@@ -50,25 +52,36 @@
                 Exit Sub
             End If
 
+            ' Define se é um novo registro ou atualização de um existente
             If editando = False Then
-                ' Salva uma OS nova já como Pendente
                 sql = "INSERT INTO tb_manutencao (tag_maquina, data_abertura, descricao, status_os) " &
                       "VALUES ('" & cmb_maquina.Text & "', '" & data_formatada & "', '" & txt_descricao.Text & "', 'Pendente')"
-                MsgBox("Ordem de Serviço lançada com sucesso!", MsgBoxStyle.Information, "Sucesso")
             Else
-                ' Atualiza a OS que já existe
                 sql = "UPDATE tb_manutencao SET " &
                       "tag_maquina = '" & cmb_maquina.Text & "', data_abertura = '" & data_formatada & "', " &
                       "descricao = '" & txt_descricao.Text & "' " &
                       "WHERE id_os = " & id_os_selecionada
-                MsgBox("Ordem de Serviço atualizada com sucesso!", MsgBoxStyle.Information, "Sucesso")
             End If
 
-            db.Execute(sql)
+            ' Executa o SQL e guarda quantas linhas foram afetadas no banco
+            Dim linhasAfetadas As Object = 0
+            db.Execute(sql, linhasAfetadas)
 
-            editando = False
-            Limpar_Campos_OS()
-            Carregar_OS()
+            ' Se afetou pelo menos 1 linha, significa que o banco salvou com sucesso
+            If CInt(linhasAfetadas) > 0 Then
+                If editando = False Then
+                    MsgBox("Ordem de Serviço lançada com sucesso!", MsgBoxStyle.Information, "Sucesso")
+                Else
+                    MsgBox("Ordem de Serviço atualizada com sucesso!", MsgBoxStyle.Information, "Sucesso")
+                End If
+
+                editando = False
+                Limpar_Campos_OS()
+                Carregar_OS()
+            Else
+                ' Se afetou 0 linhas, o banco recusou a instrução por causa de alguma restrição
+                MsgBox("Erro: O banco de dados recusou o salvamento da O.S.", MsgBoxStyle.Critical, "Aviso")
+            End If
 
         Catch ex As Exception
             MsgBox("Erro ao salvar a O.S.: " & ex.Message, MsgBoxStyle.Critical, "Erro")
@@ -83,12 +96,20 @@
             sql = "SELECT id_os AS [Nº O.S.], tag_maquina AS [TAG da Máquina], data_abertura AS [Data de Abertura], status_os AS [Status] FROM tb_manutencao ORDER BY id_os DESC"
             rs.Open(sql, db, ADODB.CursorTypeEnum.adOpenStatic, ADODB.LockTypeEnum.adLockReadOnly)
 
+            ' Passa os dados do Recordset (ADODB) para um DataTable do .NET
             Dim da As New System.Data.OleDb.OleDbDataAdapter()
             Dim dt As New DataTable
             da.Fill(dt, rs)
 
+            ' Limpa o grid completamente antes de preencher para forçar a atualização visual
+            dgv_os.DataSource = Nothing
             dgv_os.Columns.Clear()
             dgv_os.DataSource = dt
+
+            ' Garante que a coluna de data seja exibida no padrão brasileiro
+            If dgv_os.Columns.Contains("Data de Abertura") Then
+                dgv_os.Columns("Data de Abertura").DefaultCellStyle.Format = "dd/MM/yyyy"
+            End If
 
             rs.Close()
         Catch ex As Exception
@@ -100,14 +121,15 @@
         Try
             If e.RowIndex < 0 Then Exit Sub
 
+            ' Pega o ID da O.S. com base na linha que o usuário clicou
             id_os_selecionada = CInt(dgv_os.Rows(e.RowIndex).Cells(0).Value)
 
             Dim rs_edit As New ADODB.Recordset
             sql = "SELECT * FROM tb_manutencao WHERE id_os = " & id_os_selecionada
             rs_edit.Open(sql, db)
 
+            ' Carrega os dados do banco de volta para os campos da tela
             If Not rs_edit.EOF Then
-                ' Joga os dados pros campos pra poder editar
                 cmb_maquina.Text = rs_edit.Fields("tag_maquina").Value.ToString()
                 dtp_data.Value = rs_edit.Fields("data_abertura").Value
                 txt_descricao.Text = rs_edit.Fields("descricao").Value.ToString()
@@ -143,4 +165,7 @@
         Me.Hide()
     End Sub
 
+    Private Sub Label8_Click(sender As Object, e As EventArgs) Handles Label8.Click
+
+    End Sub
 End Class

@@ -157,7 +157,7 @@ Partial Class Form_1
         Me.Button1.Name = "Button1"
         Me.Button1.Size = New System.Drawing.Size(155, 24)
         Me.Button1.TabIndex = 15
-        Me.Button1.Text = "LANÇAR MANUTENÇÃO "
+        Me.Button1.Text = "ABERTURA DE O.S."
         Me.Button1.UseVisualStyleBackColor = True
         '
         'img_maquina
@@ -229,7 +229,8 @@ Partial Class Form_1
         Me.lbl_titulo.Name = "lbl_titulo"
         Me.lbl_titulo.Size = New System.Drawing.Size(896, 32)
         Me.lbl_titulo.TabIndex = 0
-        Me.lbl_titulo.Text = "Cadastro de Maquinário"
+        Me.lbl_titulo.Text = "                                                                                C" &
+    "ADASTRO DE MAQUINAS                "
         Me.lbl_titulo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
         'GroupBox1
